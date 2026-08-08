@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alexander Nguyen — Production Analyst | Sydney</title>
+<meta name="description" content="Production &amp; Operations Analyst in Sydney. SCADA, WMS and TMS monitoring, UAT/WAT and go-live support, Python and SQL. Explore my background as a terminal.">
+<meta name="author" content="Alexander Nguyen">
+<meta name="color-scheme" content="dark light">
+<link rel="canonical" href="https://alvarie.github.io/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://alvarie.github.io/">
+<meta property="og:title" content="Alexander Nguyen — Production Analyst | Sydney">
+<meta property="og:description" content="Production &amp; Operations Analyst. SCADA/WMS/TMS monitoring, UAT/WAT and go-live support, Python and SQL. Type a command to explore.">
+<meta property="og:image" content="https://alvarie.github.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A terminal window reading: Alexander Nguyen, Production Analyst, Sydney.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Alexander Nguyen — Production Analyst | Sydney">
+<meta name="twitter:description" content="Production &amp; Operations Analyst. SCADA/WMS/TMS monitoring, UAT/WAT and go-live support, Python and SQL. Type a command to explore.">
+<meta name="twitter:image" content="https://alvarie.github.io/og.png">
+
+<style>
+/* Self-hosted so the page never waits on a third-party font server. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('assets/jetbrains-mono-latin.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC,
+                 U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --bg: #0d1117;
+  --frame: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --green: #3fb950;
+  --cyan: #39c5cf;
+  --amber: #d29922;
+  --muted: #8b949e;
+  --btn-hover: #1f2937;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .55);
+  --page: #010409;
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --frame: #f6f8fa;
+  --border: #d1d9e0;
+  --text: #1f2328;
+  --green: #1a7f37;
+  --cyan: #0550ae;
+  --amber: #9a6700;
+  --muted: #59636e;
+  --btn-hover: #eaeef2;
+  --shadow: 0 18px 50px rgba(31, 35, 40, .16);
+  --page: #eef1f4;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--page);
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 16px 32px;
+}
+
+/* ---------- terminal window ---------- */
+
+.window {
+  width: 100%;
+  max-width: 900px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--frame);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.dot.red { background: #ff5f57; }
+.dot.amber { background: #febc2e; }
+.dot.green { background: #28c840; }
+
+.titlebar .title {
+  flex: 1;
+  text-align: center;
+  color: var(--muted);
+  font-size: .82rem;
+  /* keep the dots from being shoved off-centre by the theme button */
+  margin-left: -34px;
+  padding-left: 34px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.themebtn {
+  flex: none;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  font: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+  padding: 2px 8px;
+  line-height: 1.4;
+}
+.themebtn:hover { background: var(--btn-hover); color: var(--text); }
+.themebtn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+.screen {
+  height: min(66vh, 560px);
+  min-height: 340px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.screen::-webkit-scrollbar { width: 10px; }
+.screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+
+/* ---------- output ---------- */
+
+#output p { margin: 0; }
+#output .block { margin: 0 0 14px; }
+#output .block:last-child { margin-bottom: 0; }
+
+.echo { margin: 14px 0 6px; }
+#output > .block:first-child .echo,
+#output > .echo:first-child { margin-top: 0; }
+
+.prompt { color: var(--green); font-weight: 700; }
+.cmd { color: var(--cyan); }
+.head { color: var(--amber); font-weight: 700; }
+.muted { color: var(--muted); }
+.green { color: var(--green); }
+.cyan { color: var(--cyan); }
+.err { color: #ff7b72; }
+
+.banner {
+  color: var(--green);
+  font-size: clamp(5px, 1.32vw, 11px);
+  line-height: 1.15;
+  margin: 0 0 10px;
+  white-space: pre;
+  overflow: hidden;
+}
+
+.role { color: var(--text); }
+.role .where { color: var(--cyan); }
+.dates { color: var(--muted); }
+.bullet { padding-left: 2ch; text-indent: -2ch; }
+
+#output a { color: var(--cyan); text-decoration: underline; text-underline-offset: 2px; }
+#output a:hover { color: var(--green); }
+#output a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 2px; }
+
+.cols { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: 0 2ch; }
+.cols dt { color: var(--cyan); }
+.cols dd { margin: 0; min-width: 0; }
+
+.filelist { display: grid; grid-template-columns: repeat(3, minmax(0, max-content)); gap: 0 4ch; }
+
+/* ---------- input line ---------- */
+
+.inputline {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1ch;
+  margin-top: 14px;
+  word-break: break-word;
+}
+.inputline .prompt { flex: none; }
+.inputline .entry { min-width: 0; }
+.typed { white-space: pre-wrap; }
+
+.cursor {
+  display: inline-block;
+  width: 1ch;
+  height: 1.15em;
+  background: var(--green);
+  vertical-align: text-bottom;
+  translate: 0 .16em;
+}
+.inputline.focused .cursor { animation: blink 1.1s steps(1, end) infinite; }
+.inputline:not(.focused) .cursor { opacity: .35; }
+@keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+/* The real input sits invisibly on top; .typed mirrors its value so we can
+   draw a proper block cursor instead of the thin native caret. */
+#cmdinput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font: inherit;
+  outline: none;
+}
+#cmdinput::selection { background: var(--cyan); color: var(--bg); }
+
+/* ---------- menu ---------- */
+
+.menu {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.menu button {
+  background: var(--frame);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font: inherit;
+  font-size: .88rem;
+  padding: 7px 13px;
+  cursor: pointer;
+  min-height: 40px;
+}
+.menu button:hover { background: var(--btn-hover); border-color: var(--cyan); color: var(--cyan); }
+.menu button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.menu button::before { content: "$ "; color: var(--green); }
+
+.footnote { color: var(--muted); font-size: .78rem; text-align: center; margin: 0; }
+.footnote a { color: var(--muted); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (max-width: 640px) {
+  html, body { font-size: 13.5px; }
+  body { padding: 12px 10px 20px; justify-content: flex-start; }
+  .screen { height: 62vh; min-height: 300px; padding: 13px; }
+  .banner { font-size: 6px; }
+  .menu button { flex: 1 1 calc(50% - 8px); }
+  .titlebar .title { font-size: .76rem; }
+  /* A two-column definition list can't wrap gracefully at 375px — stack it. */
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .cols dd { margin: 0 0 12px; }
+  .cols dd:last-child { margin-bottom: 0; }
+  .filelist { grid-template-columns: repeat(2, minmax(0, max-content)); gap: 0 3ch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inputline.focused .cursor { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<main class="window">
+  <div class="titlebar">
+    <span class="dot red" aria-hidden="true"></span>
+    <span class="dot amber" aria-hidden="true"></span>
+    <span class="dot green" aria-hidden="true"></span>
+    <span class="title">alex@sydney: ~/portfolio</span>
+    <button class="themebtn" id="themebtn" aria-label="Switch to light theme">theme</button>
+  </div>
+
+  <div class="screen" id="screen">
+    <div id="output" role="log" aria-live="polite" aria-label="Terminal output"></div>
+
+    <div class="inputline" id="inputline">
+      <span class="prompt" aria-hidden="true">visitor@alvarie:~$</span>
+      <span class="entry" aria-hidden="true"><span class="typed" id="typed"></span><span class="cursor" id="cursor"></span></span>
+      <label class="visually-hidden" for="cmdinput">Type a command, then press Enter</label>
+      <input id="cmdinput" type="text" autocomplete="off" autocorrect="off"
+             autocapitalize="off" spellcheck="false" enterkeyhint="go">
+    </div>
+  </div>
+</main>
+
+<nav class="menu" aria-label="Portfolio commands">
+  <button data-cmd="about" aria-label="Run the about command">about</button>
+  <button data-cmd="experience" aria-label="Run the experience command">experience</button>
+  <button data-cmd="skills" aria-label="Run the skills command">skills</button>
+  <button data-cmd="projects" aria-label="Run the projects command">projects</button>
+  <button data-cmd="resume" aria-label="Open my resume as a PDF">resume</button>
+  <button data-cmd="contact" aria-label="Run the contact command">contact</button>
+</nav>
+
+<p class="footnote">Prefer to type? Try <code>help</code>. Built as one HTML file &middot;
+  <a href="https://github.com/alvarie" rel="me">github.com/alvarie</a></p>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================================
+     CONTENT — everything the site says lives in this object.
+     To update the site: edit here, commit, push. Nothing else to touch.
+     ========================================================================= */
+
+  var EMAIL = "alexandernguyenbl@gmail.com";
+  var LINKEDIN = "linkedin.com/in/alexandernguyenbl";
+  var GITHUB = "github.com/alvarie";
+  var RESUME_FILE = "resume.pdf";
+
+  var BANNER = [
+" ████  ██     ██████ ██  ██     ██  ██  █████ ██  ██ ██  ██ ██████ ██  ██",
+"██  ██ ██     ██      ████      ███ ██ ██     ██  ██  ████  ██     ███ ██",
+"██████ ██     █████    ██       ██████ ██ ███ ██  ██   ██   █████  ██████",
+"██  ██ ██     ██      ████      ██ ███ ██  ██ ██  ██   ██   ██     ██ ███",
+"██  ██ ██████ ██████ ██  ██     ██  ██  █████  █████   ██   ██████ ██  ██"
+  ].join("\n");
+
+  var EXPERIENCE = [
+    {
+      title: "Production Analyst",
+      where: "Primary Connect (Woolworths Group)",
+      dates: "2025 – Present",
+      lines: [
+        "Monitor SCADA, WMS and TMS systems to keep daily operations flowing, escalating and coordinating cross-functional response in real time.",
+        "Embedded with the Projects team through full UAT and WAT cycles for the opening of a newly automated Regional Distribution Centre.",
+        "Operational point of contact for Toyota Automated Logistics (formerly Vanderlande) and their High Level Control engineers during commissioning.",
+        "Stepped into the Production Planner role as cover — real-time order-flow calls, reported to leadership across the shift."
+      ]
+    },
+    {
+      title: "Onsite Consultant",
+      where: "Adecco — onsite at Amazon",
+      dates: "Jan 2024 – Jul 2024",
+      lines: [
+        "Primary liaison between Amazon site management and contract associates, managing escalations in both directions.",
+        "Ran structured performance check-ins that produced actionable coaching, not tick-box reviews."
+      ]
+    },
+    {
+      title: "Digital Optimisation Analyst",
+      where: "Dyson",
+      dates: "Aug 2022 – Jan 2023",
+      lines: [
+        "Analysed traffic and campaign data in Google Analytics to find conversion drivers on the Dyson Australia site.",
+        "Built KPI dashboards that replaced manual reporting cycles with at-a-glance visibility.",
+        "Designed and ran A/B tests across key site touchpoints; only changes that moved KPIs shipped."
+      ]
+    },
+    {
+      title: "Dyson Expert",
+      where: "Dyson",
+      dates: "Feb 2022 – Jan 2024",
+      lines: [
+        "Consultative product demonstrations, matching customers to the right solution.",
+        "Trained store staff across the full product range — technical knowledge and sales technique."
+      ]
+    },
+    {
+      title: "Sales Advisor",
+      where: "H&M",
+      dates: "Mar 2021 – Feb 2022",
+      lines: [
+        "Held shop-floor and visual-merchandising standards; onboarded and coached new staff."
+      ]
+    },
+    {
+      title: "Mathematics & English Tutor",
+      where: "Kumon Australia & New Zealand",
+      dates: "Feb 2018 – Apr 2021",
+      lines: [
+        "Tutored primary and high-school students, adapting to each student's individual gaps."
+      ]
+    }
+  ];
+
+  var SKILLS = [
+    ["Production & Operations",
+     "SCADA / WMS / TMS monitoring, real-time order-flow decisions, fault diagnosis, automation-layer support, commissioning support, escalation management, production planning (cover)"],
+    ["Systems & Testing",
+     "Requirements gathering, process mapping, UAT/WAT testing, test scenario design, defect management, release cycle support"],
+    ["Data & Analytics",
+     "SQL, Python, Pandas, Tableau, Google Analytics, KPI reporting, A/B testing, dashboard design, data visualisation"],
+    ["Systems & Tools",
+     "SAP, WMS, TMS, VQC, SCADA, Vanderlande/Toyota HLC, Salesforce, JIRA, Confluence, SQLite, Excel, Agile/Scrum"]
+  ];
+
+  var PROJECTS = [
+    {
+      name: "Campaign Performance Dashboards",
+      stack: "Google Analytics · Data Visualisation · Reporting",
+      /* TODO(alex): add a link here if this ever becomes shareable, e.g.
+         link: "https://github.com/alvarie/..."  */
+      blurb: "Consolidated digital campaign performance into a single view, replacing manual reporting cycles and surfacing underperforming touchpoints without anyone pulling raw reports."
+    },
+    {
+      name: "Dyson AU Web Optimisation",
+      stack: "Google Analytics · A/B Testing · SEO · KPI Dashboards",
+      blurb: "Partnered with the APAC team on load-time, mobile-experience and search-ranking improvements. Only changes that demonstrably moved KPIs were rolled out."
+    }
+  ];
+
+  /* TODO(alex): one hard number lands hard in a layout this sparse — defects
+     triaged during UAT, orders per shift, conversion lift at Dyson. Drop it
+     into the matching bullet above and into `about` when you have it. */
+
+  function h(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function renderExperience() {
+    return EXPERIENCE.map(function (r) {
+      return '<p class="role"><span class="head">' + h(r.title) + '</span> — ' +
+             '<span class="where">' + h(r.where) + '</span></p>' +
+             '<p class="dates">' + h(r.dates) + '</p>' +
+             r.lines.map(function (l) {
+               return '<p class="bullet">· ' + h(l) + '</p>';
+             }).join("");
+    }).join('<p>&nbsp;</p>');
+  }
+
+  function renderSkills() {
+    return '<dl class="cols">' + SKILLS.map(function (s) {
+      return '<dt>' + h(s[0]) + '</dt><dd>' + h(s[1]) + '</dd>';
+    }).join("") + '</dl>';
+  }
+
+  function renderProjects() {
+    return PROJECTS.map(function (p) {
+      return '<p class="head">' + h(p.name) + '</p>' +
+             '<p class="muted">' + h(p.stack) + '</p>' +
+             '<p>' + h(p.blurb) + '</p>' +
+             (p.link ? '<p><a href="' + h(p.link) + '" target="_blank" rel="noopener">' + h(p.link) + '</a></p>' : "");
+    }).join('<p>&nbsp;</p>');
+  }
+
+  /* =========================================================================
+     COMMANDS
+     ========================================================================= */
+
+  var HELP_ROWS = [
+    ["about",      "who I am and what I'm looking for"],
+    ["experience", "where I've worked and what I did there"],
+    ["skills",     "what I work with"],
+    ["projects",   "things I've built"],
+    ["education",  "degree and school"],
+    ["contact",    "email, LinkedIn, GitHub"],
+    ["resume",     "open my resume as a PDF"],
+    ["status",     "current system status"],
+    ["now",        "what I'm doing at the moment"],
+    ["ls",         "list the files in here"],
+    ["theme",      "switch between dark and light"],
+    ["clear",      "wipe the screen"],
+    ["help",       "this list"]
+  ];
+
+  var commands = {
+
+    help: function () {
+      return '<p class="muted">Available commands — type one, or click a button below.</p>' +
+             '<p>&nbsp;</p><dl class="cols">' +
+             HELP_ROWS.map(function (r) {
+               return '<dt>' + r[0] + '</dt><dd class="muted">' + r[1] + '</dd>';
+             }).join("") + '</dl>' +
+             '<p>&nbsp;</p><p class="muted">↑ ↓ for history · Tab to autocomplete</p>';
+    },
+
+    about: function () {
+      return '<p class="head">Alexander Nguyen — Production &amp; Operations Analyst, Sydney</p>' +
+             '<p>&nbsp;</p>' +
+             '<p>I keep automated distribution systems honest. Day to day that means watching SCADA, WMS and TMS, ' +
+             'making real-time order-flow calls, and driving faults to resolution with developers, testers and vendor engineers.</p>' +
+             '<p>&nbsp;</p>' +
+             '<p>I came up through digital analytics — Python, SQL, Google Analytics — and moved into operations, ' +
+             'which turns out to be the same job with higher stakes and a shorter feedback loop.</p>' +
+             '<p>&nbsp;</p>' +
+             '<p class="muted">Looking for: production support, systems analyst and BA-in-tech roles ' +
+             'where operations meets engineering.</p>';
+    },
+
+    experience: renderExperience,
+    skills: renderSkills,
+    projects: renderProjects,
+
+    education: function () {
+      return '<p class="head">Bachelor of Information Technology</p>' +
+             '<p>Macquarie University</p>' +
+             '<p>&nbsp;</p>' +
+             '<p class="head">Higher School Certificate</p>' +
+             '<p>Bossley Park High School</p>';
+    },
+
+    contact: function () {
+      return '<dl class="cols">' +
+             '<dt>email</dt><dd><a href="mailto:' + EMAIL + '">' + EMAIL + '</a></dd>' +
+             '<dt>linkedin</dt><dd><a href="https://' + LINKEDIN + '" target="_blank" rel="noopener">' + LINKEDIN + '</a></dd>' +
+             '<dt>github</dt><dd><a href="https://' + GITHUB + '" target="_blank" rel="noopener">' + GITHUB + '</a></dd>' +
+             '<dt>location</dt><dd>Sydney, NSW — Australia/Sydney</dd>' +
+             '</dl><p>&nbsp;</p>' +
+             '<p class="muted">Happy to talk about production support, systems analysis or anything with a control room.</p>';
+    },
+
+    socials: function () { return commands.contact(); },
+
+    resume: function () {
+      window.open(RESUME_FILE, "_blank", "noopener");
+      return '<p>Opening <a href="' + RESUME_FILE + '" target="_blank" rel="noopener">' + RESUME_FILE + '</a> in a new tab.</p>' +
+             '<p class="muted">If your browser blocked it, use the link above.</p>';
+    },
+
+    status: function () {
+      return '<p><span class="green">●</span> All systems operational</p>' +
+             '<p class="muted">uptime 100% · 0 open incidents · 0 P1s this quarter</p>' +
+             '<p class="muted">on call: yes, apparently always</p>';
+    },
+
+    uptime: function () { return commands.status(); },
+
+    now: function () {
+      return '<p class="head">Right now</p>' +
+             '<p>Embedded with the Projects team at a newly automated Regional Distribution Centre — ' +
+             'UAT/WAT cycles, commissioning support, and the long tail of defects that follows a go-live.</p>' +
+             '<p>&nbsp;</p>' +
+             '<p class="muted">Sharpening: SQL at depth, and the ITIL-shaped side of incident management.</p>';
+      /* TODO(alex): update this when the RDC work wraps, and add certifications
+         here (or as their own command) once you actually hold one. */
+    },
+
+    ls: function () {
+      return '<div class="filelist">' +
+             '<span class="cyan">about.txt</span><span class="cyan">experience.log</span><span class="cyan">skills.json</span>' +
+             '<span class="cyan">education.md</span><span class="cyan">contact.vcf</span><span class="cyan">resume.pdf</span>' +
+             '<span class="green">projects/</span><span class="muted">.bashrc</span><span class="muted">.secrets</span>' +
+             '</div><p>&nbsp;</p><p class="muted">Try <span class="cmd">cat about.txt</span>.</p>';
+    },
+
+    cat: function (args) {
+      var file = (args[0] || "").toLowerCase();
+      var map = {
+        "about.txt": "about", "experience.log": "experience", "skills.json": "skills",
+        "education.md": "education", "contact.vcf": "contact", "projects/": "projects",
+        "projects": "projects", "resume.pdf": "resume"
+      };
+      if (!file) return '<p class="err">cat: missing operand</p><p class="muted">Try <span class="cmd">ls</span> first.</p>';
+      if (file === ".secrets") {
+        return '<p class="muted">-- .secrets --</p><p>I alphabetise my JIRA filters. That is the whole file.</p>';
+      }
+      if (file === ".bashrc") {
+        return '<p class="muted">alias fix=\'turn it off and on again\'</p>' +
+               '<p class="muted">alias standup=\'echo "no blockers"\'</p>';
+      }
+      if (map[file]) return commands[map[file]]([]);
+      return '<p class="err">cat: ' + h(file) + ': No such file or directory</p>';
+    },
+
+    sudo: function () {
+      return '<p class="err">Permission denied: nice try 😄</p>' +
+             '<p class="muted">This incident has been logged. (It has not.)</p>';
+    },
+
+    whoami: function (args) {
+      if (args[0] === "--hire") {
+        return '<p class="head">Available and interested.</p>' +
+               '<p>Production support, systems analysis, BA-in-tech — Sydney or remote.</p>' +
+               '<p>&nbsp;</p>' +
+               '<p>Fastest route: <a href="mailto:' + EMAIL + '">' + EMAIL + '</a>. ' +
+               'Or run <span class="cmd">contact</span> for everything else.</p>';
+      }
+      return commands.about();
+    },
+
+    theme: function (args) {
+      var want = (args[0] || "").toLowerCase();
+      var next = want === "light" || want === "dark"
+        ? want
+        : (document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
+      setTheme(next);
+      return '<p class="muted">Theme set to ' + next + '.</p>';
+    },
+
+    clear: function () { return null; },
+
+    exit: function () {
+      return '<p class="muted">There is no exit. This is a webpage. ' +
+             'Try <span class="cmd">contact</span> instead.</p>';
+    }
+  };
+
+  var ALIASES = { man: "help", "?": "help", info: "about", bio: "about",
+                  work: "experience", jobs: "experience", cv: "resume",
+                  email: "contact", links: "contact", cls: "clear", quit: "exit",
+                  pwd: "ls", dir: "ls" };
+
+  /* Everything a visitor can Tab-complete. */
+  var COMPLETIONS = Object.keys(commands).concat(Object.keys(ALIASES)).sort();
+
+  /* =========================================================================
+     TERMINAL PLUMBING
+     ========================================================================= */
+
+  var screenEl = document.getElementById("screen");
+  var outputEl = document.getElementById("output");
+  var inputEl = document.getElementById("cmdinput");
+  var typedEl = document.getElementById("typed");
+  var inputLine = document.getElementById("inputline");
+  var themeBtn = document.getElementById("themebtn");
+
+  var history = [];      // in memory only — no localStorage anywhere in this file
+  var historyPos = -1;
+  var draft = "";
+  var booting = true;
+  var skipBoot = false;
+
+  var reduceMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function scrollDown() { screenEl.scrollTop = screenEl.scrollHeight; }
+
+  function print(html, cls) {
+    var div = document.createElement("div");
+    div.className = "block" + (cls ? " " + cls : "");
+    div.innerHTML = html;
+    outputEl.appendChild(div);
+    scrollDown();
+    return div;
+  }
+
+  function echo(cmdText) {
+    print('<p class="echo"><span class="prompt">visitor@alvarie:~$</span> ' +
+          '<span class="cmd">' + h(cmdText) + '</span></p>');
+  }
+
+  function setTheme(name) {
+    document.documentElement.setAttribute("data-theme", name);
+    themeBtn.setAttribute("aria-label",
+      "Switch to " + (name === "light" ? "dark" : "light") + " theme");
+  }
+
+  function runCommand(raw, options) {
+    var opts = options || {};
+    var text = String(raw).trim();
+    if (opts.echo !== false) echo(text);
+    if (!text) return;
+
+    if (!opts.silentHistory && history[history.length - 1] !== text) history.push(text);
+    historyPos = -1;
+
+    var parts = text.split(/\s+/);
+    var name = parts[0].toLowerCase();
+    var args = parts.slice(1);
+
+    if (ALIASES[name]) name = ALIASES[name];
+
+    var fn = Object.prototype.hasOwnProperty.call(commands, name) ? commands[name] : null;
+
+    if (!fn) {
+      print('<p class="err">command not found: ' + h(parts[0]) + '</p>' +
+            '<p class="muted">Type <span class="cmd">help</span> for the list, ' +
+            'or click a button below.</p>');
+      return;
+    }
+
+    var out = fn(args);
+    if (name === "clear") {
+      outputEl.innerHTML = "";
+      return;
+    }
+    if (out) print(out);
+  }
+
+  /* ---------- input mirroring + block cursor ---------- */
+
+  function syncTyped() { typedEl.textContent = inputEl.value; }
+
+  inputEl.addEventListener("input", syncTyped);
+  inputEl.addEventListener("focus", function () { inputLine.classList.add("focused"); });
+  inputEl.addEventListener("blur", function () { inputLine.classList.remove("focused"); });
+
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      var value = inputEl.value;
+      inputEl.value = "";
+      syncTyped();
+      runCommand(value);
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!history.length) return;
+      if (historyPos === -1) { draft = inputEl.value; historyPos = history.length; }
+      if (historyPos > 0) historyPos--;
+      inputEl.value = history[historyPos];
+      syncTyped();
+      moveCaretToEnd();
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (historyPos === -1) return;
+      historyPos++;
+      if (historyPos >= history.length) {
+        historyPos = -1;
+        inputEl.value = draft;
+      } else {
+        inputEl.value = history[historyPos];
+      }
+      syncTyped();
+      moveCaretToEnd();
+      return;
+    }
+
+    if (e.key === "Tab") {
+      e.preventDefault();
+      var stub = inputEl.value.trim().toLowerCase();
+      if (!stub || /\s/.test(inputEl.value.trim())) return;
+      var hits = COMPLETIONS.filter(function (c) { return c.indexOf(stub) === 0; });
+      if (hits.length === 1) {
+        inputEl.value = hits[0] + " ";
+        syncTyped();
+        moveCaretToEnd();
+      } else if (hits.length > 1) {
+        echo(inputEl.value);
+        print('<p class="muted">' + hits.map(h).join("&nbsp;&nbsp;") + '</p>');
+      }
+      return;
+    }
+
+    if (e.key === "l" && e.ctrlKey) {
+      e.preventDefault();
+      outputEl.innerHTML = "";
+    }
+  });
+
+  function moveCaretToEnd() {
+    var n = inputEl.value.length;
+    try { inputEl.setSelectionRange(n, n); } catch (err) { /* ignore */ }
+  }
+
+  /* Clicking the terminal focuses the prompt — but never while the visitor is
+     selecting text (that would make copying an email address impossible) and
+     never when they're aiming at a link. */
+  screenEl.addEventListener("click", function (e) {
+    if (booting) return;
+    if (e.target.closest("a")) return;
+    var sel = window.getSelection();
+    if (sel && !sel.isCollapsed) return;
+    inputEl.focus({ preventScroll: true });
+  });
+
+  /* ---------- menu + theme ---------- */
+
+  Array.prototype.forEach.call(document.querySelectorAll(".menu button"), function (btn) {
+    btn.addEventListener("click", function () {
+      runCommand(btn.getAttribute("data-cmd"));
+      if (!isSmallScreen()) inputEl.focus({ preventScroll: true });
+    });
+  });
+
+  themeBtn.addEventListener("click", function () { runCommand("theme"); });
+
+  function isSmallScreen() {
+    return window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
+  }
+
+  /* ---------- boot sequence ---------- */
+
+  function typeInto(el, text, speed) {
+    return new Promise(function (resolve) {
+      if (reduceMotion || skipBoot) { el.textContent = text; resolve(); return; }
+      var i = 0;
+      (function tick() {
+        if (skipBoot) { el.textContent = text; scrollDown(); resolve(); return; }
+        el.textContent = text.slice(0, ++i);
+        scrollDown();
+        if (i >= text.length) { resolve(); return; }
+        setTimeout(tick, speed);
+      })();
+    });
+  }
+
+  function pause(ms) {
+    return new Promise(function (resolve) {
+      if (reduceMotion || skipBoot) { resolve(); return; }
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function requestSkip() {
+    if (booting) skipBoot = true;
+  }
+  document.addEventListener("keydown", requestSkip);
+  document.addEventListener("pointerdown", requestSkip);
+
+  function boot() {
+    var bootLines = [
+      "mounting /home/alex",
+      "loading profile",
+      "systems nominal"
+    ];
+
+    print('<pre class="banner" role="img" aria-label="ASCII art reading Alex Nguyen">' +
+          h(BANNER) + '</pre>' +
+          '<p class="muted">Production &amp; Operations Analyst · Sydney, NSW</p>');
+
+    var chain = Promise.resolve();
+
+    bootLines.forEach(function (line) {
+      chain = chain.then(function () {
+        var block = print('<p><span class="green">[ ok ]</span> <span class="boot-line"></span></p>');
+        return typeInto(block.querySelector(".boot-line"), line, 9).then(function () {
+          return pause(55);
+        });
+      });
+    });
+
+    return chain.then(function () {
+      return pause(120);
+    }).then(function () {
+      print('<p>&nbsp;</p>' +
+            '<p>Hi — I\'m <span class="head">Alexander Nguyen</span>, a Production &amp; Operations Analyst in Sydney.</p>' +
+            '<p class="muted">Type <span class="cmd">help</span> or click a command below to begin.</p>');
+      booting = false;
+      if (!isSmallScreen()) inputEl.focus({ preventScroll: true });
+    });
+  }
+
+  /* ---------- init ---------- */
+
+  // Honour the visitor's OS preference on first paint; `theme` overrides for
+  // the session only (no storage by design).
+  setTheme(window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+    ? "light" : "dark");
+
+  syncTyped();
+  boot();
+})();
+</script>
+</body>
+</html>
