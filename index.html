@@ -556,12 +556,21 @@ body {
 
     now: function () {
       return '<p class="head">Right now</p>' +
-             '<p>Embedded with the Projects team at a newly automated Regional Distribution Centre — ' +
-             'UAT/WAT cycles, commissioning support, and the long tail of defects that follows a go-live.</p>' +
+             '<p>Production Analyst at Primary Connect, on the floor of a newly automated ' +
+             'Regional Distribution Centre. Day to day that means watching SCADA, WMS and TMS ' +
+             'for anything that interrupts the flow of orders, and deciding in the moment what ' +
+             'gets escalated and what gets handled in place.</p>' +
              '<p>&nbsp;</p>' +
-             '<p class="muted">Sharpening: SQL at depth, and the ITIL-shaped side of incident management.</p>';
-      /* TODO(alex): update this when the RDC work wraps, and add certifications
-         here (or as their own command) once you actually hold one. */
+             '<p>The interesting problems live at the automation layer — working with the Toyota ' +
+             'Automated Logistics HLC engineers when a fault sits upstream of anything the WMS can ' +
+             'show me, then writing up what we found in JIRA and Confluence so the next person on ' +
+             'shift doesn\'t start from scratch.</p>' +
+             '<p>&nbsp;</p>' +
+             '<p class="muted">Also covering the Production Planner seat when it\'s empty: ' +
+             'real-time order-flow calls, and keeping leadership across the shift.</p>';
+      /* TODO(alex): this is your steady-state description. Swap in whatever is
+         actually occupying you when it changes — `now` is the one command
+         people expect to be current. */
     },
 
     ls: function () {
