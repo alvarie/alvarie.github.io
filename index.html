@@ -648,6 +648,7 @@ body {
   var draft = "";
   var booting = true;
   var skipBoot = false;
+  var bootPromise = null;
 
   var reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -675,6 +676,14 @@ body {
   }
 
   function runCommand(raw, options) {
+    // An impatient visitor can click a menu button mid-boot. Cut the boot short
+    // and queue their command behind it, so output never interleaves.
+    if (booting) {
+      skipBoot = true;
+      bootPromise.then(function () { runCommand(raw, options); });
+      return;
+    }
+
     var opts = options || {};
     var text = String(raw).trim();
     if (opts.echo !== false) echo(text);
@@ -873,7 +882,7 @@ body {
     ? "light" : "dark");
 
   syncTyped();
-  boot();
+  bootPromise = boot();
 })();
 </script>
 </body>
