@@ -1,2 +1,6 @@
 .DS_Store
 .claude/
+
+# The editable resume source. Kept local on purpose: the site links resume.pdf,
+# so publishing the .docx adds nothing and hands anyone a ready-to-edit copy.
+resume.docx
