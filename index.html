@@ -926,6 +926,78 @@ body {
     return div;
   }
 
+  /* ---------- streamed output ---------- */
+
+  /* Pacing. Short blocks run at a readable per-character clip; at that rate a
+     long section would take half a minute, so the total is capped and long
+     blocks stream faster instead. Any key or click finishes a block early. */
+  var TYPE_MS_PER_CHAR = 11;
+  var TYPE_MS_MIN = 300;
+  var TYPE_MS_MAX = 2800;
+
+  var typingDone = null;    // finishes the block in flight, or null when idle
+
+  function finishTyping() { if (typingDone) typingDone(); }
+
+  /* Reveal a block the way a terminal streams it rather than snapping it into
+     place. Walks the text nodes so the markup — links, colours, the skills
+     table — survives intact; slicing the HTML string would tear tags in half.
+
+     Length sets the pace: a two-line `status` types out character by character,
+     while `experience` streams several characters a frame so it stays under the
+     ceiling. Both read as typing rather than a section appearing at once. */
+  function printTyped(html) {
+    var div = document.createElement("div");
+    div.className = "block";
+    div.innerHTML = html;
+
+    var nodes = [], total = 0;
+    var walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null);
+    for (var n; (n = walker.nextNode());) {
+      if (!n.nodeValue) continue;
+      nodes.push({ node: n, text: n.nodeValue });
+      total += n.nodeValue.length;
+      n.nodeValue = "";       // blanked before it's on screen, so nothing jumps
+    }
+
+    outputEl.appendChild(div);
+    if (!total) { scrollDown(); return div; }
+
+    var duration = Math.min(TYPE_MS_MAX, Math.max(TYPE_MS_MIN, total * TYPE_MS_PER_CHAR));
+    var perFrame = Math.max(1, Math.ceil(total / (duration / 16)));
+    var at = 0, filled = 0, raf = null;
+
+    function finish() {
+      if (raf) cancelAnimationFrame(raf);
+      for (; at < nodes.length; at++) nodes[at].node.nodeValue = nodes[at].text;
+      typingDone = null;
+      // Screen readers hold off on a busy live region and announce the
+      // finished block once, instead of narrating it character by character.
+      outputEl.setAttribute("aria-busy", "false");
+      scrollDown();
+    }
+
+    function step() {
+      var budget = perFrame;
+      while (budget > 0 && at < nodes.length) {
+        var cur = nodes[at];
+        var take = Math.min(budget, cur.text.length - filled);
+        filled += take;
+        budget -= take;
+        cur.node.nodeValue = cur.text.slice(0, filled);
+        if (filled >= cur.text.length) { at++; filled = 0; }
+      }
+      scrollDown();
+      if (at < nodes.length) raf = requestAnimationFrame(step);
+      else finish();
+    }
+
+    outputEl.setAttribute("aria-busy", "true");
+    typingDone = finish;
+    raf = requestAnimationFrame(step);
+    return div;
+  }
+
   function echo(cmdText) {
     print('<p class="echo"><span class="prompt">visitor@alvarie:~$</span> ' +
           '<span class="cmd">' + h(cmdText) + '</span></p>');
@@ -945,6 +1017,10 @@ body {
       bootPromise.then(function () { runCommand(raw, options); });
       return;
     }
+
+    // Whatever is still streaming lands in full first, so two commands can
+    // never interleave their output.
+    finishTyping();
 
     var opts = options || {};
     var text = String(raw).trim();
@@ -975,7 +1051,9 @@ body {
       writeUrl(null);
       return;
     }
-    if (out) print(out);
+    // document.hidden covers a link opened in a background tab: rAF is frozen
+    // there, so animating would leave the block empty until it's looked at.
+    if (out) (reduceMotion || document.hidden ? print : printTyped)(out);
     if (linkable(name)) writeUrl(name);
   }
 
@@ -1078,6 +1156,7 @@ body {
 
     if (e.key === "l" && e.ctrlKey) {
       e.preventDefault();
+      finishTyping();
       outputEl.innerHTML = "";
     }
   });
@@ -1136,8 +1215,17 @@ body {
     });
   }
 
-  function requestSkip() {
-    if (booting) skipBoot = true;
+  /* Impatience is a valid preference: any key or click cuts the boot short, and
+     lands a streaming block in full rather than making anyone watch it out.
+
+     Enter is the exception. It bubbles up here *after* the input handler has
+     already started the new block streaming, so treating it as a skip would
+     make every command instantly complete its own output. Running a command
+     while one is still streaming is handled in runCommand instead. */
+  function requestSkip(e) {
+    if (booting) { skipBoot = true; return; }
+    if (e && e.type === "keydown" && e.key === "Enter") return;
+    finishTyping();
   }
   document.addEventListener("keydown", requestSkip);
   document.addEventListener("pointerdown", requestSkip);

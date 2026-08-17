@@ -88,6 +88,21 @@ Choices that look like omissions but aren't:
   Arguments complete too (`cat ab⇥`, `theme l⇥`), and `projects/` completes
   without a trailing space the way a directory does. `ARG_COMPLETIONS` maps a
   command to its argument list; `cat`'s comes straight from `FILES`.
+- **Output streams in rather than snapping into place.** `printTyped()` walks the
+  block's text nodes and fills them a few characters per frame, so the markup —
+  links, colours, the skills table — survives; slicing the HTML string would tear
+  tags in half. Length sets the pace (`TYPE_MS_PER_CHAR`, floored and capped):
+  a short `status` types out character by character in about a second, while
+  `experience` streams several characters a frame to stay under the ~2.8s
+  ceiling. Any key or click lands the block in full — except Enter, which
+  bubbles up *after* the input handler has started the new block and would
+  otherwise make every command instantly skip its own output. Any new command
+  finishes the block in flight first, so two commands can't interleave. Skipped
+  entirely under
+  `prefers-reduced-motion`, and when `document.hidden` — rAF is frozen in a
+  background tab, where animating would just leave the block empty until someone
+  looked at it. The live region is marked `aria-busy` while streaming so screen
+  readers announce the finished block once instead of narrating each character.
 - **Inline suggestions are fish-style**, drawn in grey after the cursor and
   accepted with → or End. Recently run commands outrank the completion tables,
   since the thing you just ran is the thing you're most likely typing again.
