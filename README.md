@@ -19,6 +19,7 @@ The pieces you'll touch most:
 | Roles and bullets | `EXPERIENCE` array |
 | Skill buckets | `SKILLS` array |
 | Projects | `PROJECTS` array |
+| Files `ls`, `cat` and Tab know about | `FILES` array |
 | Intro paragraph | `ABOUT_BODY` constant |
 | Email / LinkedIn / GitHub | `EMAIL`, `LINKEDIN`, `GITHUB` constants |
 | Command list in `help` | `HELP_ROWS` array |
@@ -79,6 +80,19 @@ Choices that look like omissions but aren't:
   reason — a changed address can't go stale in a second place.
 - **Lookups keyed by visitor input go through `own()`.** A bare `obj[word]` returns
   inherited members, so `cat constructor` used to resolve to `Object` and throw.
+- **Tab extends, then cycles.** It first completes as far as every candidate
+  agrees; once there's no common ground left, each Tab swaps in the next
+  candidate *in place* (⇧Tab reverses) rather than printing the list to the
+  screen, which turned the output into a wall of repeated candidates. The text
+  you typed is the last stop in the cycle, so there's always a way back out.
+  Arguments complete too (`cat ab⇥`, `theme l⇥`), and `projects/` completes
+  without a trailing space the way a directory does. `ARG_COMPLETIONS` maps a
+  command to its argument list; `cat`'s comes straight from `FILES`.
+- **Inline suggestions are fish-style**, drawn in grey after the cursor and
+  accepted with → or End. Recently run commands outrank the completion tables,
+  since the thing you just ran is the thing you're most likely typing again.
+  The suggestion hides whenever the caret isn't at the end of the line — it's
+  drawn after the cursor, so anywhere else it would be lying about what → does.
 - **The font is self-hosted**, so the page never blocks on a third-party font server.
 - **Anything a visitor types is HTML-escaped** before it's echoed back.
 - **Accessibility:** output is an `aria-live` region so screen readers announce it,

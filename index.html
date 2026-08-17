@@ -214,6 +214,10 @@ body {
 .inputline .entry { min-width: 0; }
 .typed { white-space: pre-wrap; }
 
+/* The rest of what you'd get by pressing →. Sits after the block cursor, so
+   the cursor reads as the boundary between what you typed and what's offered. */
+.ghost { color: var(--muted); white-space: pre-wrap; }
+
 .cursor {
   display: inline-block;
   width: 1ch;
@@ -389,7 +393,7 @@ body {
 
     <div class="inputline" id="inputline">
       <span class="prompt" aria-hidden="true">visitor@alvarie:~$</span>
-      <span class="entry" aria-hidden="true"><span class="typed" id="typed"></span><span class="cursor" id="cursor"></span></span>
+      <span class="entry" aria-hidden="true"><span class="typed" id="typed"></span><span class="cursor" id="cursor"></span><span class="ghost" id="ghost"></span></span>
       <label class="visually-hidden" for="cmdinput">Type a command, then press Enter</label>
       <input id="cmdinput" type="text" autocomplete="off" autocorrect="off"
              autocapitalize="off" spellcheck="false" enterkeyhint="go">
@@ -530,6 +534,21 @@ body {
     '<p class="muted">Looking for: production support, systems analyst and BA-in-tech roles ' +
     'where operations meets engineering.</p>';
 
+  /* The pretend filesystem, in `ls` display order. One list feeds `ls`, `cat`
+     and Tab completion, so a file can never show up in one and not the others.
+     `to` is the command a file prints; the dotfiles are handled inside `cat`. */
+  var FILES = [
+    { name: "about.txt",      to: "about" },
+    { name: "experience.log", to: "experience" },
+    { name: "skills.json",    to: "skills" },
+    { name: "education.md",   to: "education" },
+    { name: "contact.vcf",    to: "contact" },
+    { name: "resume.pdf",     to: "resume" },
+    { name: "projects/",      to: "projects", dir: true },
+    { name: ".bashrc",        hidden: true },
+    { name: ".secrets",       hidden: true }
+  ];
+
   /* TODO(alex): one hard number lands hard in a layout this sparse — defects
      triaged during UAT, orders per shift, conversion lift at Dyson. Drop it
      into the matching bullet above and into `ABOUT_BODY` when you have it. */
@@ -545,6 +564,18 @@ body {
      through here. */
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+
+  /* Scanning the list beats a lookup object here — it sidesteps the prototype
+     problem entirely, and `projects` should find `projects/` the way a shell
+     would. */
+  function findFile(name) {
+    for (var i = 0; i < FILES.length; i++) {
+      var f = FILES[i];
+      if (f.name === name) return f;
+      if (f.dir && f.name.slice(0, -1) === name) return f;
+    }
+    return null;
   }
 
   function renderExperience() {
@@ -601,7 +632,7 @@ body {
              HELP_ROWS.map(function (r) {
                return '<dt>' + r[0] + '</dt><dd class="muted">' + r[1] + '</dd>';
              }).join("") + '</dl>' +
-             '<p>&nbsp;</p><p class="muted">↑ ↓ for history · Tab to autocomplete</p>';
+             '<p>&nbsp;</p><p class="muted">↑ ↓ for history · Tab cycles the options (⇧Tab goes back) · → accepts the grey suggestion</p>';
     },
 
     about: function () {
@@ -668,19 +699,15 @@ body {
 
     ls: function () {
       return '<div class="filelist">' +
-             '<span class="cyan">about.txt</span><span class="cyan">experience.log</span><span class="cyan">skills.json</span>' +
-             '<span class="cyan">education.md</span><span class="cyan">contact.vcf</span><span class="cyan">resume.pdf</span>' +
-             '<span class="green">projects/</span><span class="muted">.bashrc</span><span class="muted">.secrets</span>' +
+             FILES.map(function (f) {
+               var cls = f.hidden ? "muted" : (f.dir ? "green" : "cyan");
+               return '<span class="' + cls + '">' + h(f.name) + '</span>';
+             }).join("") +
              '</div><p>&nbsp;</p><p class="muted">Try <span class="cmd">cat about.txt</span>.</p>';
     },
 
     cat: function (args) {
       var file = (args[0] || "").toLowerCase();
-      var map = {
-        "about.txt": "about", "experience.log": "experience", "skills.json": "skills",
-        "education.md": "education", "contact.vcf": "contact", "projects/": "projects",
-        "projects": "projects", "resume.pdf": "resume"
-      };
       if (!file) return '<p class="err">cat: missing operand</p><p class="muted">Try <span class="cmd">ls</span> first.</p>';
       if (file === ".secrets") {
         return '<p class="muted">-- .secrets --</p><p>I alphabetise my JIRA filters. That is the whole file.</p>';
@@ -689,7 +716,8 @@ body {
         return '<p class="muted">alias fix=\'turn it off and on again\'</p>' +
                '<p class="muted">alias standup=\'echo "no blockers"\'</p>';
       }
-      if (own(map, file)) return commands[map[file]]([]);
+      var hit = findFile(file);
+      if (hit && hit.to) return commands[hit.to]([]);
       return '<p class="err">cat: ' + h(file) + ': No such file or directory</p>';
     },
 
@@ -732,8 +760,92 @@ body {
                   email: "contact", links: "contact", cls: "clear", quit: "exit",
                   pwd: "ls", dir: "ls" };
 
-  /* Everything a visitor can Tab-complete. */
+  /* =========================================================================
+     COMPLETION — readline's rules, which are the ones muscle memory expects:
+     Tab extends the line as far as every candidate agrees, and when it can't
+     extend any further a second Tab lists what's left. Candidates are all
+     lowercase, so matching is done in lowercase throughout.
+     ========================================================================= */
+
+  /* Command names in the first word. */
   var COMPLETIONS = Object.keys(commands).concat(Object.keys(ALIASES)).sort();
+
+  /* Arguments in the second word, per command. */
+  var ARG_COMPLETIONS = {
+    cat: FILES.map(function (f) { return f.name; }),
+    theme: ["dark", "light"],
+    whoami: ["--hire"]
+  };
+
+  function commonPrefix(list) {
+    var pre = list[0];
+    for (var i = 1; i < list.length && pre; i++) {
+      while (list[i].indexOf(pre) !== 0) pre = pre.slice(0, -1);
+    }
+    return pre;
+  }
+
+  /* What is being completed, and what it would be completed against.
+     Returns null when there's nothing sensible to offer. */
+  function completionContext(value) {
+    var line = value.replace(/^\s+/, "");
+    if (!/\s/.test(line)) {
+      return { pool: COMPLETIONS, stub: line.toLowerCase(), prefix: "" };
+    }
+    var parts = line.split(/\s+/);
+    if (parts.length > 2) return null;      // nothing here takes a second argument
+
+    var cmd = parts[0].toLowerCase();
+    if (own(ALIASES, cmd)) cmd = ALIASES[cmd];
+    if (!own(ARG_COMPLETIONS, cmd)) return null;
+
+    return { pool: ARG_COMPLETIONS[cmd], stub: parts[1].toLowerCase(), prefix: parts[0] + " " };
+  }
+
+  /* A trailing slash means "there's more to type", exactly as in a shell. */
+  function withTrailingSpace(c) {
+    return /\/$/.test(c) ? c : c + " ";
+  }
+
+  function complete(back) {
+    // Still sitting on exactly what the last Tab wrote? Then keep walking the
+    // same list rather than starting over.
+    if (cycle && inputEl.value === cycle.last) {
+      cycle.index = (cycle.index + (back ? -1 : 1) + cycle.entries.length) % cycle.entries.length;
+      cycle.last = cycle.entries[cycle.index];
+      setInput(cycle.last);
+      return;
+    }
+    cycle = null;
+
+    var ctx = completionContext(inputEl.value);
+    if (!ctx) return;
+
+    // Sorted, so cycling goes in the order you'd expect to read them.
+    var hits = ctx.pool.filter(function (c) { return c.indexOf(ctx.stub) === 0; }).sort();
+    if (!hits.length) return;
+
+    if (hits.length === 1) {
+      setInput(ctx.prefix + withTrailingSpace(hits[0]));
+      return;
+    }
+
+    // Extend as far as every candidate agrees before offering a choice.
+    var pre = commonPrefix(hits);
+    if (pre.length > ctx.stub.length) {
+      setInput(ctx.prefix + pre);
+      return;
+    }
+
+    // No more common ground: walk the candidates in place. What you typed is
+    // the last stop, so there's always a way back out of the cycle.
+    var entries = hits.map(function (c) { return ctx.prefix + withTrailingSpace(c); });
+    entries.push(ctx.prefix + ctx.stub);
+
+    cycle = { entries: entries, index: back ? hits.length - 1 : 0 };
+    cycle.last = cycle.entries[cycle.index];
+    setInput(cycle.last);
+  }
 
   /* =========================================================================
      DEEP LINKS — the URL is the only state this page keeps. `#experience`
@@ -787,12 +899,15 @@ body {
   var outputEl = document.getElementById("output");
   var inputEl = document.getElementById("cmdinput");
   var typedEl = document.getElementById("typed");
+  var ghostEl = document.getElementById("ghost");
   var inputLine = document.getElementById("inputline");
   var themeBtn = document.getElementById("themebtn");
 
   var history = [];      // in memory only — no localStorage anywhere in this file
   var historyPos = -1;
   var draft = "";
+  var cycle = null;         // in-progress Tab cycle, or null between cycles
+  var ghostText = "";       // the pending inline suggestion, "" when there's none
   var booting = true;
   var skipBoot = false;
   var bootPromise = null;
@@ -866,9 +981,48 @@ body {
 
   /* ---------- input mirroring + block cursor ---------- */
 
-  function syncTyped() { typedEl.textContent = inputEl.value; }
+  /* What pressing → would add, fish-style. Recently used commands win over the
+     completion tables, because the thing you just ran is the thing you're most
+     likely typing again. Returns "" when there's nothing worth offering. */
+  function suggestionFor(value) {
+    if (!value) return "";
+    // The ghost is drawn after the cursor, so it only makes sense at line end.
+    if (inputEl.selectionStart !== value.length) return "";
+
+    for (var i = history.length - 1; i >= 0; i--) {
+      if (history[i] !== value && history[i].indexOf(value) === 0) {
+        return history[i].slice(value.length);
+      }
+    }
+
+    var ctx = completionContext(value);
+    // An empty stub would offer a essentially arbitrary first candidate; wait
+    // until they've committed to a letter.
+    if (!ctx || !ctx.stub) return "";
+
+    var hits = ctx.pool.filter(function (c) { return c.indexOf(ctx.stub) === 0; }).sort();
+    return hits.length ? hits[0].slice(ctx.stub.length) : "";
+  }
+
+  function syncTyped() {
+    typedEl.textContent = inputEl.value;
+    ghostText = suggestionFor(inputEl.value);
+    ghostEl.textContent = ghostText;
+  }
+
+  /* Replace the line and put the caret after it — what history recall and
+     completion both want. Caret first, so the suggestion sees the final one. */
+  function setInput(v) {
+    inputEl.value = v;
+    moveCaretToEnd();
+    syncTyped();
+  }
 
   inputEl.addEventListener("input", syncTyped);
+  /* Moving the caret fires no input event, but it does decide whether a
+     suggestion still belongs on screen. */
+  inputEl.addEventListener("keyup", syncTyped);
+  inputEl.addEventListener("click", syncTyped);
   inputEl.addEventListener("focus", function () { inputLine.classList.add("focused"); });
   inputEl.addEventListener("blur", function () { inputLine.classList.remove("focused"); });
 
@@ -887,9 +1041,7 @@ body {
       if (!history.length) return;
       if (historyPos === -1) { draft = inputEl.value; historyPos = history.length; }
       if (historyPos > 0) historyPos--;
-      inputEl.value = history[historyPos];
-      syncTyped();
-      moveCaretToEnd();
+      setInput(history[historyPos]);
       return;
     }
 
@@ -899,28 +1051,28 @@ body {
       historyPos++;
       if (historyPos >= history.length) {
         historyPos = -1;
-        inputEl.value = draft;
+        setInput(draft);
       } else {
-        inputEl.value = history[historyPos];
+        setInput(history[historyPos]);
       }
-      syncTyped();
-      moveCaretToEnd();
+      return;
+    }
+
+    // → and End accept the inline suggestion, but only from the end of the
+    // line — mid-line they have to keep meaning "move the caret".
+    if (e.key === "ArrowRight" || e.key === "End") {
+      // Bare key only — Shift+→ is a selection, Ctrl/Cmd+→ is a jump.
+      if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (ghostText && inputEl.selectionStart === inputEl.value.length) {
+        e.preventDefault();
+        setInput(inputEl.value + ghostText);
+      }
       return;
     }
 
     if (e.key === "Tab") {
       e.preventDefault();
-      var stub = inputEl.value.trim().toLowerCase();
-      if (!stub || /\s/.test(inputEl.value.trim())) return;
-      var hits = COMPLETIONS.filter(function (c) { return c.indexOf(stub) === 0; });
-      if (hits.length === 1) {
-        inputEl.value = hits[0] + " ";
-        syncTyped();
-        moveCaretToEnd();
-      } else if (hits.length > 1) {
-        echo(inputEl.value);
-        print('<p class="muted">' + hits.map(h).join("&nbsp;&nbsp;") + '</p>');
-      }
+      complete(e.shiftKey);   // Shift+Tab walks the cycle backwards
       return;
     }
 
