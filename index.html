@@ -7,6 +7,8 @@
 <meta name="description" content="Production &amp; Operations Analyst in Sydney. SCADA, WMS and TMS monitoring, UAT/WAT and go-live support, Python and SQL. Explore my background as a terminal.">
 <meta name="author" content="Alexander Nguyen">
 <meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#010409" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef1f4" media="(prefers-color-scheme: light)">
 <link rel="canonical" href="https://alvarie.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -293,9 +295,85 @@ body {
   .inputline.focused .cursor { animation: none; }
   * { scroll-behavior: auto !important; }
 }
+
+/* ---------- printable CV ----------
+   Built by JS from the same command handlers the terminal uses, so there is
+   still only one copy of the content. Hidden on screen (display:none keeps its
+   links out of the tab order and out of the a11y tree without needing
+   aria-hidden), revealed for print — otherwise Cmd+P would capture only the
+   one screenful the visitor happens to have scrolled to. */
+
+.printable { display: none; }
+
+@media print {
+  html, body {
+    background: #fff;
+    color: #000;
+    display: block;
+    margin: 0;
+    padding: 0;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+  .window, .menu, .footnote { display: none !important; }
+
+  .printable { display: block; }
+  .printable p { margin: 0; }
+  .printable a { color: #000; text-decoration: none; }
+
+  .printable .print-name {
+    font-size: 17pt;
+    font-weight: 700;
+    margin: 0 0 2pt;
+  }
+  .printable .print-sub { margin: 0 0 1pt; }
+  .printable .print-links { font-size: 9.5pt; color: #333; margin: 0 0 4pt; }
+
+  .printable h2 {
+    font-size: 11pt;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    border-bottom: .75pt solid #000;
+    padding-bottom: 2pt;
+    margin: 14pt 0 6pt;
+    page-break-after: avoid;
+  }
+
+  /* Colour-coded on screen; all of it is just text on paper. */
+  .printable .head, .printable .role, .printable .where,
+  .printable .green, .printable .cyan, .printable .cols dt { color: #000; }
+  .printable .head, .printable .cols dt { font-weight: 700; }
+  .printable .muted, .printable .dates { color: #444; }
+
+  /* Don't strand a job title at the foot of a page from its bullets. */
+  .printable .role, .printable .dates { page-break-after: avoid; }
+  .printable .bullet { page-break-inside: avoid; }
+}
 </style>
 </head>
 <body>
+
+<noscript>
+  <style>
+    .window, .menu, .footnote { display: none !important; }
+    .noscript-cv { max-width: 640px; margin: 0 auto; }
+    .noscript-cv h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    .noscript-cv ul { padding-left: 1.2em; }
+  </style>
+  <div class="noscript-cv">
+    <h1>Alexander Nguyen</h1>
+    <p class="muted">Production &amp; Operations Analyst &middot; Sydney, NSW</p>
+    <p>This portfolio runs as an interactive terminal, which needs JavaScript. The short version:
+      I keep automated distribution systems honest — SCADA, WMS and TMS monitoring, UAT/WAT and
+      go-live support, Python and SQL.</p>
+    <ul>
+      <li><a href="resume.pdf">resume.pdf</a> — the full CV</li>
+      <li><a href="mailto:alexandernguyenbl@gmail.com">alexandernguyenbl@gmail.com</a></li>
+      <li><a href="https://linkedin.com/in/alexandernguyenbl">linkedin.com/in/alexandernguyenbl</a></li>
+      <li><a href="https://github.com/alvarie">github.com/alvarie</a></li>
+    </ul>
+  </div>
+</noscript>
 
 <main class="window">
   <div class="titlebar">
@@ -330,6 +408,9 @@ body {
 
 <p class="footnote">Prefer to type? Try <code>help</code>. Built as one HTML file &middot;
   <a href="https://github.com/alvarie" rel="me">github.com/alvarie</a></p>
+
+<!-- Filled in by the script; only ever visible on paper. -->
+<div class="printable" id="printable"></div>
 
 <script>
 (function () {
@@ -437,13 +518,33 @@ body {
     }
   ];
 
+  /* Split from its heading so the printable CV can reuse the prose without
+     repeating the name that already sits at the top of the page. */
+  var ABOUT_BODY =
+    '<p>I keep automated distribution systems honest. Day to day that means watching SCADA, WMS and TMS, ' +
+    'making real-time order-flow calls, and driving faults to resolution with developers, testers and vendor engineers.</p>' +
+    '<p>&nbsp;</p>' +
+    '<p>I came up through digital analytics — Python, SQL, Google Analytics — and moved into operations, ' +
+    'which turns out to be the same job with higher stakes and a shorter feedback loop.</p>' +
+    '<p>&nbsp;</p>' +
+    '<p class="muted">Looking for: production support, systems analyst and BA-in-tech roles ' +
+    'where operations meets engineering.</p>';
+
   /* TODO(alex): one hard number lands hard in a layout this sparse — defects
      triaged during UAT, orders per shift, conversion lift at Dyson. Drop it
-     into the matching bullet above and into `about` when you have it. */
+     into the matching bullet above and into `ABOUT_BODY` when you have it. */
 
   function h(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  /* Visitors type arbitrary words, and a plain `obj[word]` lookup happily
+     returns inherited members — `cat constructor` used to resolve to
+     Object itself and throw. Every lookup keyed by visitor input goes
+     through here. */
+  function own(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
   }
 
   function renderExperience() {
@@ -505,15 +606,7 @@ body {
 
     about: function () {
       return '<p class="head">Alexander Nguyen — Production &amp; Operations Analyst, Sydney</p>' +
-             '<p>&nbsp;</p>' +
-             '<p>I keep automated distribution systems honest. Day to day that means watching SCADA, WMS and TMS, ' +
-             'making real-time order-flow calls, and driving faults to resolution with developers, testers and vendor engineers.</p>' +
-             '<p>&nbsp;</p>' +
-             '<p>I came up through digital analytics — Python, SQL, Google Analytics — and moved into operations, ' +
-             'which turns out to be the same job with higher stakes and a shorter feedback loop.</p>' +
-             '<p>&nbsp;</p>' +
-             '<p class="muted">Looking for: production support, systems analyst and BA-in-tech roles ' +
-             'where operations meets engineering.</p>';
+             '<p>&nbsp;</p>' + ABOUT_BODY;
     },
 
     experience: renderExperience,
@@ -596,7 +689,7 @@ body {
         return '<p class="muted">alias fix=\'turn it off and on again\'</p>' +
                '<p class="muted">alias standup=\'echo "no blockers"\'</p>';
       }
-      if (map[file]) return commands[map[file]]([]);
+      if (own(map, file)) return commands[map[file]]([]);
       return '<p class="err">cat: ' + h(file) + ': No such file or directory</p>';
     },
 
@@ -622,6 +715,7 @@ body {
         ? want
         : (document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
       setTheme(next);
+      writeTheme(next);
       return '<p class="muted">Theme set to ' + next + '.</p>';
     },
 
@@ -640,6 +734,50 @@ body {
 
   /* Everything a visitor can Tab-complete. */
   var COMPLETIONS = Object.keys(commands).concat(Object.keys(ALIASES)).sort();
+
+  /* =========================================================================
+     DEEP LINKS — the URL is the only state this page keeps. `#experience`
+     makes a section shareable; `?theme=light` carries an explicitly chosen
+     theme across a reload. Neither one touches storage.
+     ========================================================================= */
+
+  /* Commands worth landing on. Deliberately excludes `resume` (would fire a
+     popup blocker on load), `clear`, `theme` and the easter eggs. */
+  var LINKABLE = ["about", "experience", "skills", "projects", "education",
+                  "contact", "status", "now", "help", "ls"];
+
+  function linkable(name) { return LINKABLE.indexOf(name) !== -1; }
+
+  function readHash() {
+    var raw = String(location.hash || "").replace(/^#/, "").toLowerCase();
+    return linkable(raw) ? raw : null;
+  }
+
+  function readTheme() {
+    if (!window.URLSearchParams) return null;
+    var t = new URLSearchParams(location.search).get("theme");
+    return t === "light" || t === "dark" ? t : null;
+  }
+
+  /* `history` is the command-history array in this scope, so these have to say
+     window.history explicitly.
+
+     replaceState rather than pushState: the address bar should always describe
+     what you're looking at, but Back should leave the site rather than walk
+     back through every command you ran. */
+  function writeUrl(hash) {
+    if (!window.history || !window.history.replaceState) return;
+    window.history.replaceState(null, "",
+      location.pathname + location.search + (hash ? "#" + hash : ""));
+  }
+
+  function writeTheme(name) {
+    if (!window.history || !window.history.replaceState || !window.URLSearchParams) return;
+    var params = new URLSearchParams(location.search);
+    params.set("theme", name);
+    window.history.replaceState(null, "",
+      location.pathname + "?" + params.toString() + location.hash);
+  }
 
   /* =========================================================================
      TERMINAL PLUMBING
@@ -705,9 +843,9 @@ body {
     var name = parts[0].toLowerCase();
     var args = parts.slice(1);
 
-    if (ALIASES[name]) name = ALIASES[name];
+    if (own(ALIASES, name)) name = ALIASES[name];
 
-    var fn = Object.prototype.hasOwnProperty.call(commands, name) ? commands[name] : null;
+    var fn = own(commands, name) ? commands[name] : null;
 
     if (!fn) {
       print('<p class="err">command not found: ' + h(parts[0]) + '</p>' +
@@ -719,9 +857,11 @@ body {
     var out = fn(args);
     if (name === "clear") {
       outputEl.innerHTML = "";
+      writeUrl(null);
       return;
     }
     if (out) print(out);
+    if (linkable(name)) writeUrl(name);
   }
 
   /* ---------- input mirroring + block cursor ---------- */
@@ -879,16 +1019,80 @@ body {
             '<p>Hi — I\'m <span class="head">Alexander Nguyen</span>, a Production &amp; Operations Analyst in Sydney.</p>' +
             '<p class="muted">Type <span class="cmd">help</span> or click a command below to begin.</p>');
       booting = false;
+      var deep = readHash();
+      if (deep) runCommand(deep, { silentHistory: true });
       if (!isSmallScreen()) inputEl.focus({ preventScroll: true });
     });
   }
 
+  /* ---------- printable CV + structured data ---------- */
+
+  /* Same handlers the terminal runs, so the paper version can never drift
+     from the screen version. */
+  var PRINT_SECTIONS = [
+    ["About", function () { return ABOUT_BODY; }],
+    ["Experience", renderExperience],
+    ["Skills", renderSkills],
+    ["Projects", renderProjects],
+    ["Education", commands.education]
+  ];
+
+  function buildPrintable() {
+    var el = document.getElementById("printable");
+    if (!el) return;
+    el.innerHTML =
+      '<p class="print-name">Alexander Nguyen</p>' +
+      '<p class="print-sub">Production &amp; Operations Analyst · Sydney, NSW</p>' +
+      '<p class="print-links">' + h(EMAIL) + ' · ' + h(LINKEDIN) + ' · ' + h(GITHUB) + '</p>' +
+      PRINT_SECTIONS.map(function (s) {
+        return '<section><h2>' + h(s[0]) + '</h2>' + s[1]([]) + '</section>';
+      }).join("");
+  }
+
+  /* Built from the constants above so a changed email can't go stale here. */
+  function injectSchema() {
+    var el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Alexander Nguyen",
+      "jobTitle": "Production & Operations Analyst",
+      "url": "https://alvarie.github.io/",
+      "email": "mailto:" + EMAIL,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Sydney",
+        "addressRegion": "NSW",
+        "addressCountry": "AU"
+      },
+      "worksFor": { "@type": "Organization", "name": "Primary Connect (Woolworths Group)" },
+      "alumniOf": { "@type": "CollegeOrUniversity", "name": "Macquarie University" },
+      "sameAs": ["https://" + LINKEDIN, "https://" + GITHUB],
+      "knowsAbout": ["SCADA", "Warehouse Management Systems",
+                     "Transport Management Systems", "UAT", "SQL", "Python",
+                     "Data Analysis"]
+    });
+    document.head.appendChild(el);
+  }
+
   /* ---------- init ---------- */
 
-  // Honour the visitor's OS preference on first paint; `theme` overrides for
-  // the session only (no storage by design).
-  setTheme(window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light" : "dark");
+  // An explicit ?theme wins; otherwise honour the visitor's OS preference.
+  setTheme(readTheme() ||
+    (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light" : "dark"));
+
+  buildPrintable();
+  injectSchema();
+
+  // Someone following a section link came for the section, not the animation.
+  if (readHash()) skipBoot = true;
+
+  window.addEventListener("hashchange", function () {
+    var name = readHash();
+    if (name && !booting) runCommand(name, { silentHistory: true });
+  });
 
   syncTyped();
   bootPromise = boot();
